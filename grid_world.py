@@ -39,4 +39,25 @@ def is_valid(board: list[list[str]], max_size: int) -> bool:
     return False
 
 
+def generate_random_map(size=8, p=0.8):
+    """Generates a random valid map (one that has a path from start to goal)
+    Args:
+        size: size of each side of the grid
+        p: probability that a tile is frozen
+    Returns:
+        A random valid map
+    """
+    valid = False
+    board = []
+    while not valid:
+        p = min(1, p)
+        board = np.random.choice(["F", "T"], (size, size), p=[p, 1 - p])
+        board[0][0] = "S"
+        board[-1][-1] = "G"
+        valid = is_valid(board, size)
+        print(valid)
+        print(board)
+    return ["".join(x) for x in board]
+
+generate_random_map(8, 0.8)
 print(is_valid(MAPS["4x4"], 4))

@@ -206,8 +206,13 @@ class GridWorldEnv(discrete.DiscreteEnv):
         if mode != 'human':
             with closing(outfile):
                 return outfile.getvalue()
-
     def GetSuccessors(self, state, action):
+        """
+        Returns the possible next states (with
+        non-zero transition probability) and
+        their transition probabilities. this allows us to ignore all states with
+        zero transition probability
+        """
         next_states = np.nonzero(self.TransitionProb[action, state, :])
         probs = self.TransitionProb[action, state, next_states]
         return [(state, prob) for state, prob in zip(next_states[0], probs[0])]

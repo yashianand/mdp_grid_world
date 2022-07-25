@@ -99,14 +99,13 @@ class GridWorldEnv(discrete.DiscreteEnv):
         map_name: name of the map
         stochastic: whether to use stochastic transitions
         """
-
+        # Create the environment
         if desc is None and map_name is None:
             desc = generate_random_map()
         elif desc is None:
             desc = MAPS[map_name]
-        self.desc = desc = np.asarray(desc, dtype='c')
+        self.desc = desc = np.asarray(desc, dtype='c') # to numpy array where each element is a byte (type: numpy.bytes_)
         self.nrow, self.ncol = nrow, ncol = desc.shape
-        self.reward_range = (0, 1)
 
         # Rewards for each state
         rew_goal = 100
@@ -117,13 +116,12 @@ class GridWorldEnv(discrete.DiscreteEnv):
         nA = 4
         nS = nrow * ncol
 
-        initial_state_distribution = np.array(desc == b'S').astype('float64').ravel()
+        initial_state_distribution = np.array(desc == b'S').astype('float64').ravel() # 2d to 1d
         initial_state_distribution /= initial_state_distribution.sum()
 
         # P - transition probability matrix
-        P = {s : {a : [] for a in range(nA)} for s in range(nS)}
-        self.TransitProb = np.zeros((nA, nS + 1, nS + 1))
-        self.TransitReward = np.zeros((nS + 1, nA))
+        P = {s : {a : [] for a in range(nA)} for s in range(nS)} # len(P) = nS, len(P[0]) = nA
+
 
         def to_s(row, col):
             return row * ncol + col
@@ -139,4 +137,41 @@ class GridWorldEnv(discrete.DiscreteEnv):
                 row = max(row-1, 0)
             return (row, col)
 
- 
+        def update_prob_matrix(row, col, action):
+            newrow, newcol = inc(row, col, action)
+            newstate = to_s(newrow, newcol)
+            newletter = desc[newrow, newcol]
+            done = bytes(newletter) in b'G'
+            if newletter == b'G':
+                rew = rew_goal
+            elif newletter == b'T':
+                rew = rew_traffic
+            else:
+                rew = rew_step
+            return newstate, rew, done
+
+        for row in range(nrow):
+            for col in range(ncol):
+                s = to_s(row, col)
+                for a in range(4):
+                    li = P[s][a]
+                    """
+                    li: list of tuples. Transition from state s to (all) states s' with action a.
+                    (transition_probability, in ending in state s, with a reward, terminal state(bool))
+                    """
+                    letter = desc[row, col]
+                    if letter in b"G":
+                        li.append((1.0, s, 0, True))
+                    else:
+                        if stochastic:
+                            for b, p in zip([a, (a+1)%4, (a+2)%4, (a+3)%4], TransitionProb):
+                                newstate, rew, done = update_prob_matrix(row, col, b)
+                                li.append((p, newstate, rew, done))
+                        else:
+                            newstate, rew, done = update_prob_matrix(row, col, a)
+                            li.append((1.0, newstate, rew, done))
+                            # print(s, li) # sanity check
+
+        super().__init__(nS, nA, P, initial_state_distribution)
+
+    

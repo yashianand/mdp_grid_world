@@ -4,13 +4,15 @@ References:
 (2) OpenAI Gym's FrozenLake-v0 environment (https://github.com/openai/gym/blob/master/gym/envs/toy_text/frozen_lake.py)
 """
 
+from copy import deepcopy
 from mimetypes import init
 from tkinter import Grid
-import matplotlib.pyplot as plt
+from matplotlib import pyplot as plt
 import numpy as np
 import sys
 from six import StringIO, b
 from contextlib import closing
+import time
 
 from gym.envs.toy_text import discrete
 from gym import utils
@@ -30,7 +32,7 @@ MAPS = {
         ]
     }
 
-TransitionProb = [0.8, 0.2]
+TransProb = [0.8, 0.2]
 
 # DFS to check that it's a valid path.
 def is_valid(board: list[list[str]], max_size: int) -> bool:
@@ -106,6 +108,7 @@ class GridWorldEnv(discrete.DiscreteEnv):
             desc = MAPS[map_name]
         self.desc = desc = np.asarray(desc, dtype='c') # to numpy array where each element is a byte (type: numpy.bytes_)
         self.nrow, self.ncol = nrow, ncol = desc.shape
+        self.reward_range = (0, 1)
 
         # Rewards for each state
         rew_goal = 100
@@ -122,6 +125,9 @@ class GridWorldEnv(discrete.DiscreteEnv):
         # P - transition probability matrix
         P = {s : {a : [] for a in range(nA)} for s in range(nS)} # len(P) = nS, len(P[0]) = nA
 
+        # transition prob. and reward for each state-action pair (for VI)
+        self.TransitionProb = np.zeros((nA, nS+1, nS+1)) # (action, start_state, end_state)
+        self.TransitionReward = np.zeros((nS+1, nA))
 
         def to_s(row, col):
             return row * ncol + col
@@ -163,15 +169,21 @@ class GridWorldEnv(discrete.DiscreteEnv):
                     """
                     letter = desc[row, col]
                     if letter in b"G":
-                        li.append((1.0, s, 0, True))
+                        li.append((1.0, s, 100, True))
+                        self.TransitionProb[a, s, nS] = 1.0
+                        self.TransitionReward[s, a] = rew_goal
                     else:
                         if stochastic:
-                            for b, p in zip([a, (a+1)%4, (a+2)%4, (a+3)%4], TransitionProb):
+                            for b, p in zip([a, (a+1)%4, (a+2)%4, (a+3)%4], TransProb):
                                 newstate, rew, done = update_prob_matrix(row, col, b)
                                 li.append((p, newstate, rew, done))
+                                self.TransitionProb[a, s, newstate] += p
+                                self.TransitionReward[s, a] = rew_step
                         else:
                             newstate, rew, done = update_prob_matrix(row, col, a)
                             li.append((1.0, newstate, rew, done))
+                            self.TransitionProb[a, s, newstate] += 1.0
+                            self.TransitionReward[s, a] = rew_step
                             # print(s, li) # sanity check
 
         super().__init__(nS, nA, P, initial_state_distribution)
@@ -195,6 +207,19 @@ class GridWorldEnv(discrete.DiscreteEnv):
             with closing(outfile):
                 return outfile.getvalue()
 
+    def GetSuccessors(self, state, action):
+        next_states = np.nonzero(self.TransitionProb[action, state, :])
+        probs = self.TransitionProb[action, state, next_states]
+        return [(state, prob) for state, prob in zip(next_states[0], probs[0])]
+
+    def GetReward(self, state, action):
+        return self.TransitionReward[state, action]
+
+    def GetStateSpace(self):
+        return self.TransitionProb.shape[1] # = nS
+
+    def GetActionSpace(self):
+        return self.TransitionProb.shape[0] # = nA
 
 # to generate a random env, do the following:
 # map_name = generate_random_map(4, 0.8)
@@ -203,10 +228,11 @@ class GridWorldEnv(discrete.DiscreteEnv):
 # env.render()
 
 # to use the default env, do the following:
+map_size = 4
 env = GridWorldEnv()
 env.render()
 
-
+"""
 # For checking the environment created (game to be played by the user)
 print("---------actions--------")
 print("a: Left\ns: Down\nd: Right\nw: Up\n(q: quit)")
@@ -246,3 +272,58 @@ for _ in range(1000):
     if done:
         print('Reached Goal!')
         break
+"""
+
+def value_iteration(env, beta=0.99, epsilon=0.0001):
+    """
+    Value Iteration Algorithm.
+    Inputs:
+        env: OpenAI environment.
+        beta: discount factor.
+        epsilon: tolerance.
+    Outputs:
+        V: value function.
+        policy: policy function.
+    """
+    nS = env.GetStateSpace()
+    nA = env.GetActionSpace()
+
+    v = np.zeros(nS)
+    pi = np.zeros(nS)
+
+    v_new = np.zeros(nS)
+    pi_new = np.zeros(nS)
+
+    bellman_err = np.inf
+
+    while bellman_err > epsilon:
+        bellman_err = 0
+        for state in range(nS):
+            rewards = []
+            state_action_pair = []
+            for action in range(nA):
+                total_trans_prob = 0
+                state_action_pair.append((state, action))
+                for next_state, trans_prob in env.GetSuccessors(state, action):
+                    total_trans_prob += (trans_prob * v[next_state])
+                total_trans_prob *= beta
+                rewards.append(env.GetReward(state, action) + total_trans_prob)
+
+            max_reward = max(rewards)
+            reward_idx = rewards.index(max_reward)
+            arg_max_state, arg_max_action = state_action_pair[reward_idx]
+
+            v_new[state] = max_reward
+            pi_new[state] = arg_max_action
+            bellman_err = max(bellman_err, abs(v_new[state] - v[state]))
+
+        v = deepcopy(v_new)
+        pi = deepcopy(pi_new)
+    return v, pi
+
+start_time = time.time()
+v, pi = value_iteration(env, beta = 0.99)
+v_np, pi_np  = np.array(v), np.array(pi)
+print("\nState Value: \n{} \n\nPolicy: \n{}".format(np.array(v_np[:-1]).reshape((map_size,map_size)), np.array(pi_np[:-1]).reshape((map_size,map_size))))
+end_time = time.time()
+print("Total runtime = ", (end_time - start_time))

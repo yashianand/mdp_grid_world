@@ -11,7 +11,8 @@ There are 3 items involved:
 
 - It first initializes all values $V_curr$ at time=0 arbitrarily.
 - In the $curr$ iteration, it makes a full sweep, i.e., iterates over all states, computing a new approximation $V_new$ for the state values using the successor values from the previous iteration $(V_{curr})$ as
-Algorithm:
+
+### Algorithm:
 - Start with $V_{curr}(s) = 0$ for all $s$
 - error = $\infty$
 - While error > $\epsilon$

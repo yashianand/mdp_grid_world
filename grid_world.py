@@ -158,6 +158,8 @@ class GridWorldEnv(discrete.DiscreteEnv):
                     """
                     li: list of tuples. Transition from state s to (all) states s' with action a.
                     (transition_probability, in ending in state s, with a reward, terminal state(bool))
+
+                    li is used by step() to select the next state by random sampling
                     """
                     letter = desc[row, col]
                     if letter in b"G":
@@ -227,7 +229,6 @@ for _ in range(1000):
         continue
 
     observation, reward, done, info = env.step(a)
-    print(env.step(a))
     rew += reward
     print("---------actions--------")
     print("a: Left\ns: Down\nd: Right\nw: Up\n(q: quit)")

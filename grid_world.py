@@ -174,4 +174,74 @@ class GridWorldEnv(discrete.DiscreteEnv):
 
         super().__init__(nS, nA, P, initial_state_distribution)
 
-    
+    def render(self, mode='human'):
+        # Attributes of a GridWorldEnv instance
+        # attributes = dir(self)
+        # print(attributes)
+        outfile = StringIO() if mode=='ansi' else sys.stdout
+        row, col = self.s // self.ncol, self.s % self.ncol
+        desc = self.desc.tolist()
+        desc = [[c.decode('utf-8') for c in line] for line in desc]
+        desc[row][col] = utils.colorize(desc[row][col], "red", highlight=True)
+        if self.lastaction is not None:
+            outfile.write("  ({})\n".format(["Left", "Down", "Right", "Up"][self.lastaction]))
+        else:
+            outfile.write("\n")
+        outfile.write("\n".join(''.join(line) for line in desc)+"\n")
+
+        if mode != 'human':
+            with closing(outfile):
+                return outfile.getvalue()
+
+
+# to generate a random env, do the following:
+# map_name = generate_random_map(4, 0.8)
+# print(is_valid(map_name, 4)) # sanity check
+# env = GridWorldEnv(desc=map_name)
+# env.render()
+
+# to use the default env, do the following:
+env = GridWorldEnv()
+env.render()
+
+
+# For checking the environment created (game to be played by the user)
+print("---------actions--------")
+print("a: Left\ns: Down\nd: Right\nw: Up\n(q: quit)")
+rew = 0
+
+for _ in range(1000):
+    a = input("Enter action: ")
+    if a == "q":
+        break
+    elif a == 'a':
+        a = 0
+    elif a == 's':
+        a = 1
+    elif a == 'd':
+        a = 2
+    elif a == 'w':
+        a = 3
+    else:
+        print("Invalid action")
+        continue
+
+    observation, reward, done, info = env.step(a)
+    print(env.step(a))
+    rew += reward
+    print("---------actions--------")
+    print("a: Left\ns: Down\nd: Right\nw: Up\n(q: quit)")
+    print()
+    print("current state:" + str(observation))
+    if info['prob'] == TransitionProb[0] or info['prob'] == 1:
+        print('moved to expected direction')
+    else:
+        print('moved to unexpected direction')
+    print("probabilty: " + str(info['prob']))
+    print("current reward:" + str(rew))
+    print()
+    env.render()
+    print()
+    if done:
+        print('Reached Goal!')
+        break

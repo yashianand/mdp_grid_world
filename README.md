@@ -1,4 +1,4 @@
 # Grid world implementation for MDPs
 
-- [ ] Implement the grid world
-- [ ] Value Iteration for the grid world
+- [x] Implement the grid world
+- [x] Value Iteration for the grid world

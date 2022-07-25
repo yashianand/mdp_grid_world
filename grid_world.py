@@ -4,9 +4,14 @@ References:
 (2) OpenAI Gym's FrozenLake-v0 environment (https://github.com/openai/gym/blob/master/gym/envs/toy_text/frozen_lake.py)
 """
 
+from mimetypes import init
 from tkinter import Grid
 import matplotlib.pyplot as plt
 import numpy as np
+import sys
+from six import StringIO, b
+from contextlib import closing
+
 from gym.envs.toy_text import discrete
 from gym import utils
 
@@ -68,10 +73,6 @@ def generate_random_map(size=8, p=0.8):
         # print(board)
     return ["".join(x) for x in board]
 
-map_name = generate_random_map(4, 0.8)
-
-# print(is_valid(MAPS["4x4"], 4))
-
 
 # Grid World Environment
 class GridWorldEnv(discrete.DiscreteEnv):
@@ -92,7 +93,7 @@ class GridWorldEnv(discrete.DiscreteEnv):
 
     metadata = {'render.modes': ['human', 'ansi']}
 
-    def __init__(self, desc=None, map_name="4x4", stochastic=True):
+    def __init__(self, desc=None, map_name="4x4", stochastic=False):
         """
         desc: map description, list[list[char code]]
         map_name: name of the map
@@ -107,9 +108,17 @@ class GridWorldEnv(discrete.DiscreteEnv):
         self.nrow, self.ncol = nrow, ncol = desc.shape
         self.reward_range = (0, 1)
 
+        # Rewards for each state
+        rew_goal = 100
+        rew_step = -1
+        rew_traffic = -10
+
         # number of actions and states
         nA = 4
         nS = nrow * ncol
+
+        initial_state_distribution = np.array(desc == b'S').astype('float64').ravel()
+        initial_state_distribution /= initial_state_distribution.sum()
 
         # P - transition probability matrix
         P = {s : {a : [] for a in range(nA)} for s in range(nS)}
@@ -130,5 +139,4 @@ class GridWorldEnv(discrete.DiscreteEnv):
                 row = max(row-1, 0)
             return (row, col)
 
-        
-GridWorldEnv(map_name)
+ 

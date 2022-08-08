@@ -1,8 +1,6 @@
 from grid_world import gridWorld, printEnvironment
 import numpy as np
 
-
-
 def valueIteration(grid, gamma=0.99, epsilon=0.01):
     nS = grid.num_states
     nA = grid.num_actions
@@ -18,8 +16,8 @@ def valueIteration(grid, gamma=0.99, epsilon=0.01):
             state_action_pair = []
             r, c = grid.to_pos(state)
             value = []
-            if grid.grid_list[r][c] == 'G':
-                v_new[state] = 100.
+            if grid.grid_list[r][c] == grid.terminal_marker:
+                v_new[state] = grid.rewards['G']
                 continue
             for action in range(nA):
                 state_action_pair.append((state, action))
@@ -36,8 +34,8 @@ def valueIteration(grid, gamma=0.99, epsilon=0.01):
 
 
 
-v, pi = valueIteration(gridWorld, gamma=0.99)
-print("\nFinal State Values: \n")
-printEnvironment(np.array(v[:]).reshape((4,4)))
-print("\nFinal Policy:\n")
-printEnvironment(np.array(pi[:], dtype=int).reshape((4,4)), policy=True)
+# v, pi = valueIteration(gridWorld, gamma=0.99)
+# print("\nFinal State Values: \n")
+# printEnvironment(np.array(v[:]).reshape((4,4)))
+# print("\nFinal Policy:\n")
+# printEnvironment(np.array(pi[:], dtype=int).reshape((4,4)), policy=True)

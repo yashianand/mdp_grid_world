@@ -359,3 +359,12 @@ print("Total runtime = ", (end_time - start_time))
 # evaluate policy
 avg_reward, sd_reward = evaluate_policy_discounted(env, pi, discount_factor = 0.99, trials=10)
 print("Average discounted reward: {}\nStandard Deviation: {}".format(avg_reward, sd_reward))
+
+   def step(self, a):
+        transitions = self.P[self.s][a]
+        i = categorical_sample([t[0] for t in transitions], self.np_random)
+        p, s, r, t = transitions[i]
+        self.s = s
+        self.lastaction = a
+        self.renderer.render_step()
+        return (int(s), r, t, False, {"prob": p})

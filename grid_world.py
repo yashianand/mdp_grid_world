@@ -1,7 +1,9 @@
 import numpy as np
 class GridWorld:
+    gridWorld = None
 
     def __init__(self, grid, rewards, directions, state=0, terminal_marker='G'):
+        self.reset()
         self.grid = grid = np.asarray(grid, dtype='c')
         # self.grid_list = self.grid.tolist()
         self.grid_list = [[c.decode('utf-8') for c in line] for line in self.grid.tolist()]
@@ -13,6 +15,25 @@ class GridWorld:
         self.rows = len(self.grid)
         self.cols = len(self.grid[0])
         self.num_states = self.rows * self.cols
+
+    def reset(self):
+        self.state = 0
+
+    def step(self, action):
+        terminal = False
+        # reward = self.get_reward(self.state)
+        transitions = self.get_successors(self.state, action)
+        s_prime, prob = [], []
+        for i in transitions:
+            s_prime.append(i[0])
+            prob.append(i[1])
+        next_state = np.random.choice(s_prime, p=prob)
+        idx = s_prime.index(next_state)
+        reward = self.get_reward(self.state)
+        r, c = self.to_pos(next_state)
+        if self.grid_list[r][c] == self.terminal_marker:
+            terminal = True
+        return prob[idx], next_state, reward, terminal
 
     def to_s(self, row, col):
         self.state = row * self.cols + col
@@ -28,13 +49,13 @@ class GridWorld:
 
     def move(self, state, action):
         state_pos = self.to_pos(state)
-        new_state = tuple((state_pos + self.actions[action]).reshape(1, -1)[0])
-        if self.is_boundary(new_state):
+        new_state_pos = tuple((state_pos + self.actions[action]).reshape(1, -1)[0])
+        if self.is_boundary(new_state_pos):
             self.state = state
             return self.state, True
         else:
-            self.state = new_state
-            return self.state, False
+            self.state = self.to_s(new_state_pos[0], new_state_pos[1])
+            return self.to_pos(self.state), False
 
     def get_transition_prob(self, s1, action, s2):
         '''

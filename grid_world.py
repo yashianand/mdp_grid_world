@@ -28,12 +28,13 @@ class GridWorld:
             s_prime.append(i[0])
             prob.append(i[1])
         next_state = np.random.choice(s_prime, p=prob)
+        self.state = next_state
         idx = s_prime.index(next_state)
         reward = self.get_reward(self.state)
         r, c = self.to_pos(next_state)
         if self.grid_list[r][c] == self.terminal_marker:
             terminal = True
-        return prob[idx], next_state, reward, terminal
+        return next_state, reward, prob[idx], terminal
 
     def to_s(self, row, col):
         self.state = row * self.cols + col

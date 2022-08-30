@@ -1,4 +1,4 @@
-from grid_world import sspWorld
+from grid_world import sspWorld, printEnvironment
 import numpy as np
 
 '''
@@ -17,23 +17,39 @@ def qValue(grid, state, action):
 
 def update(grid, state):
     action = greedy_action(grid, state)
+    pi[state] = action
     v[state] = qValue(grid, state, action)
 
 def pickNextState(grid, state, action):
-    successors = grid.get_successors(state, action)
-    for i in successors:
-        next_state, trans_prob = i
+    transitions = grid.get_successors(state, action)
+    s_prime, prob = [], []
+    for i in transitions:
+        s_prime.append(i[0])
+        prob.append(i[1])
+    next_state = np.random.choice(s_prime, p=prob)
     return next_state
 
 def residual(grid, state):
     action = greedy_action(grid, state)
     return abs(v[state] - qValue(grid, state, action))
 
+def printEnvironment(grid, vals,  policy=False):
+    res = ""
+    for r in range(grid.rows):
+        res += "|"
+        for c in range(grid.cols):
+            if policy:
+                val = ["Left", "Up", "Right", "Down"][vals[r][c]]
+            else:
+                val = str([vals[r][c]])
+            res += " " + val[:5].ljust(5) + " |" # format
+        res += "\n"
+    print(res)
+
 '''
 --------------------------Check if solved--------------------------
 '''
 def checkSolved(grid, state, epsilon):
-    print("*******************check solved*******************")
     rv = True
     open = []
     closed = []
@@ -45,7 +61,7 @@ def checkSolved(grid, state, epsilon):
         closed.append(state)
 
         # check residual
-        if residual(grid, state) < epsilon:
+        if residual(grid, state) > epsilon:
             rv = False
             continue
 
@@ -53,7 +69,7 @@ def checkSolved(grid, state, epsilon):
         action = greedy_action(grid, state)
         for (next_state, trans_prob) in grid.get_successors(state, action):
             if trans_prob > 0:
-                if (next_state not in SOLVED) and (next_state not in open.union(closed)):
+                if (next_state not in SOLVED) and (next_state not in list(set(open) | set(closed))):
                     open.append(next_state)
 
     if rv == True:
@@ -65,7 +81,6 @@ def checkSolved(grid, state, epsilon):
         while closed != []:
             state = closed.pop()
             update(grid, state)
-    print("SOLVED: ", SOLVED)
     return rv
 
 '''
@@ -76,7 +91,6 @@ def lrtdp_trial(grid, state, epsilon):
     visited = []
     while state not in SOLVED:
         # insert into visited
-        print("state: ", state)
         visited.append(state)
 
         # check termination at goal states
@@ -87,12 +101,9 @@ def lrtdp_trial(grid, state, epsilon):
         # pick best action and update hash
         a = greedy_action(grid, state)
         update(grid, state)
-        print("Best action: ", a)
-        print("Grid update: ", v)
 
         # stochastically simulate next state
         state = pickNextState(grid, state, a)
-        input()
 
 
     # try labeling visited states in reverse order
@@ -104,12 +115,17 @@ def lrtdp_trial(grid, state, epsilon):
 def lrtdp(grid, state, epsilon):
     while state not in SOLVED:
         lrtdp_trial(grid, state, epsilon)
-    print("Final value: ", v)
+    # printEnvironment(np.array(v[:], dtype=int).reshape((4,4)), policy=False)
+    print("Value iteration: \n")
+    printEnvironment(grid, np.array(v[:], dtype=float).reshape(4,4), policy=False)
+    print("Policy iteration: \n")
+    printEnvironment(grid, np.array(pi[:], dtype=int).reshape(4,4), policy=True)
 
 if __name__ == "__main__":
     SOLVED = []
     nS = sspWorld.num_states
     nA = sspWorld.num_actions
     v = np.zeros(nS)
+    pi = np.zeros(nS)
     sspWorld.reset()
     lrtdp(sspWorld, sspWorld.state, epsilon=0.99)

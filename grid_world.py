@@ -105,7 +105,7 @@ class GridWorld:
         state_pos = self.to_pos(state)
         x, y = state_pos[0], state_pos[1]
         if self.grid_list[x][y] == 'S':
-            pos_reward = -1
+            pos_reward = 1
         else:
             pos_reward = self.rewards[self.grid_list[x][y]]
             # reward[new_state] = pos_reward
@@ -114,9 +114,9 @@ class GridWorld:
 # Visualization
 def printEnvironment(grid, policy=False):
     res = ""
-    for r in range(gridWorld.rows):
+    for r in range(grid.rows):
         res += "|"
-        for c in range(gridWorld.cols):
+        for c in range(grid.cols):
             if policy:
                 val = ["Left", "Up", "Right", "Down"][grid[r][c]]
             else:
@@ -139,12 +139,19 @@ grid =[
         "FFFF"
         ]
 
-rewards = {
+grid_rewards = {
     'F': -1,
     'T': -10,
     'G': 100
 }
 
+ssp_cost = {
+    'F': 1,
+    'T': 10,
+    'G': 0
+}
+
 directions = [0, 1, 2, 3] # [left, up, right, down]
 
-gridWorld = GridWorld(grid, rewards, directions, terminal_marker='G')
+# gridWorld = GridWorld(grid, grid_rewards, directions, terminal_marker='G')
+sspWorld = GridWorld(grid, ssp_cost, directions, terminal_marker='G')

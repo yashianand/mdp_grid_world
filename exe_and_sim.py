@@ -7,7 +7,7 @@ def play_episodes(grid, trials, policy):
     rewards = []
     for _ in range(trials):
         trial_reward = 0
-        terminated = False
+        terminal= False
         grid.reset()
         observation, reward, prob, terminal = grid.step(int(policy[0]))
         trial_reward += reward

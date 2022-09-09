@@ -116,9 +116,9 @@ def lrtdp(grid, state, epsilon):
     while state not in SOLVED:
         lrtdp_trial(grid, state, epsilon)
     # printEnvironment(np.array(v[:], dtype=int).reshape((4,4)), policy=False)
-    print("Value iteration: \n")
+    print("Value function: \n")
     printEnvironment(grid, np.array(v[:], dtype=float).reshape(4,4), policy=False)
-    print("Policy iteration: \n")
+    print("Policy: \n")
     printEnvironment(grid, np.array(pi[:], dtype=int).reshape(4,4), policy=True)
 
 if __name__ == "__main__":
@@ -128,4 +128,4 @@ if __name__ == "__main__":
     v = np.zeros(nS)
     pi = np.zeros(nS)
     sspWorld.reset()
-    lrtdp(sspWorld, sspWorld.state, epsilon=0.99)
+    lrtdp(sspWorld, sspWorld.state, epsilon=0.01)

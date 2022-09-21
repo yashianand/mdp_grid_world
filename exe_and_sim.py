@@ -1,4 +1,4 @@
-from grid_world import gridWorld, printEnvironment
+from grid_world_mdp import gridWorld, printEnvironment
 from policy_iteration import policyIteration
 from value_iteration import valueIteration
 import numpy as np

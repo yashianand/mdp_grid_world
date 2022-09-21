@@ -1,4 +1,4 @@
-from grid_world import gridWorld, printEnvironment
+from grid_world_mdp import gridWorld, printEnvironment
 import numpy as np
 
 def policyIteration(grid, gamma=0.99, epsilon=0.01, max_iter=1000):

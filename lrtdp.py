@@ -115,18 +115,20 @@ def lrtdp_trial(grid, state, epsilon):
 def lrtdp(grid, state, epsilon):
     while state not in SOLVED:
         lrtdp_trial(grid, state, epsilon)
-    print("\n\nIteration: ", i)
+    print("--"*20)
+    print("Iteration: ", i)
     print("Value function: \n")
     printEnvironment(grid, np.array(v[:], dtype=float).reshape(4,4), policy=False)
     print("Policy: \n")
     printEnvironment(grid, np.array(pi[:], dtype=int).reshape(4,4), policy=True)
+    print("--"*20)
 
 if __name__ == "__main__":
     nS = sspWorld.num_states
     nA = sspWorld.num_actions
-    for i in range(20):
+    for i in range(10):
         SOLVED = []
         v = np.zeros(nS)
         pi = np.zeros(nS)
         sspWorld.reset()
-        lrtdp(sspWorld, sspWorld.state, epsilon=0.9)
+        lrtdp(sspWorld, sspWorld.state, epsilon=0.1)

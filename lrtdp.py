@@ -1,4 +1,4 @@
-from grid_world import sspWorld, printEnvironment
+from grid_world_ssp import sspWorld, printEnvironment
 import numpy as np
 
 '''
@@ -105,9 +105,9 @@ def lrtdp_trial(grid, state, epsilon):
         # stochastically simulate next state
         state = pickNextState(grid, state, a)
 
-
     # try labeling visited states in reverse order
     while visited != []:
+        # print("Visited: ", visited)
         state = visited.pop()
         if not checkSolved(grid, state, epsilon):
             break
@@ -115,17 +115,18 @@ def lrtdp_trial(grid, state, epsilon):
 def lrtdp(grid, state, epsilon):
     while state not in SOLVED:
         lrtdp_trial(grid, state, epsilon)
-    # printEnvironment(np.array(v[:], dtype=int).reshape((4,4)), policy=False)
+    print("\n\nIteration: ", i)
     print("Value function: \n")
     printEnvironment(grid, np.array(v[:], dtype=float).reshape(4,4), policy=False)
     print("Policy: \n")
     printEnvironment(grid, np.array(pi[:], dtype=int).reshape(4,4), policy=True)
 
 if __name__ == "__main__":
-    SOLVED = []
     nS = sspWorld.num_states
     nA = sspWorld.num_actions
-    v = np.zeros(nS)
-    pi = np.zeros(nS)
-    sspWorld.reset()
-    lrtdp(sspWorld, sspWorld.state, epsilon=0.01)
+    for i in range(20):
+        SOLVED = []
+        v = np.zeros(nS)
+        pi = np.zeros(nS)
+        sspWorld.reset()
+        lrtdp(sspWorld, sspWorld.state, epsilon=0.9)

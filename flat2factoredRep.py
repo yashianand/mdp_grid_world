@@ -2,16 +2,20 @@ import numpy as np
 from pip import main
 
 class FactoredGridWorld:
-
-    def __init__(self, grid, directions, terminal_marker='G'):
+    gridWorld = None
+    def __init__(self, grid, directions, state=(0, 0), terminal_marker='G'):
+        self.reset()
         self.grid = grid = np.asarray(grid, dtype='c')
-        # self.grid_list = self.grid.tolist()
         self.grid_list = [[c.decode('utf-8') for c in line] for line in self.grid.tolist()]
         self.num_actions = len(directions)
+        self.state = state
         self.terminal_marker = terminal_marker
         self.rows = len(self.grid)
         self.cols = len(self.grid[0])
         self.num_states = self.rows * self.cols
+
+    def reset(self):
+        self.state = 0
 
     # should I code for all possible states and weed out unreachable states later?
     def getStateFactorRep(self):
@@ -27,6 +31,22 @@ class FactoredGridWorld:
                     featureRep.append([(i, j), False, False])
 
         return featureRep
+
+    def step(self, action):
+        terminal = False
+        factoredNextStates = self.get_successors(self.state, action)
+        s_prime, prob = [], []
+        for i in factoredNextStates:
+            s_prime.append(i[0])
+            prob.append(i[1])
+        next_state = np.random.choice(s_prime, p=prob)
+        self.state = next_state[0]
+        idx = s_prime.index(next_state)
+        reward = self.get_reward(next_state)
+        r, c = next_state[0][0], next_state[0][1]
+        if self.grid_list[r][c] == self.terminal_marker:
+            terminal = True
+        return next_state, reward, prob[idx], terminal
 
     def getActionFactorRep(self, a):
         # a = 0: left, a = 1: up, a = 2: right, a = 3: down
@@ -83,7 +103,7 @@ class FactoredGridWorld:
             next_state = self.getStateFactorRep()[i][0]
             p = self.getTransitionFactorRep(state, action, next_state)
             if p > 0:
-                successors.append((next_state, p))
+                successors.append((self.getStateFactorRep()[i], p))
         return successors
 
     def get_reward(self, factoredStateRep):

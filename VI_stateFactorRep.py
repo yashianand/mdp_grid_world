@@ -10,9 +10,9 @@ def valueIteration(grid, gamma=0.99, epsilon=0.01):
     pi_new = np.zeros((nRows, nCols))
 
     factoredStates = grid.getStateFactorRep()
-    # print("Factored States: ")
-    # for i in factoredStates:
-    #     print(i)
+    print("Factored States: ")
+    for i in factoredStates:
+        print(i)
 
     while True:
         v = v_new.copy()
@@ -27,7 +27,7 @@ def valueIteration(grid, gamma=0.99, epsilon=0.01):
             for action in range(nA):
                 factoredAction = grid.getActionFactorRep(action)
                 state_action_pair.append((state, factoredAction))
-                value.append(sum([trans_prob*(v[next_state[0]][next_state[1]]) for (next_state, trans_prob) in grid.get_successors(state, action)]) )
+                value.append(sum([trans_prob*(v[next_state[0][0]][next_state[0][1]]) for (next_state, trans_prob) in grid.get_successors(state, action)]) )
             v_new[state[0]][state[1]] = grid.get_reward(factoredStates[i]) + gamma * max(value)
             pi_new[state[0]][state[1]] = value.index(max(value))
             delta = max(delta, abs((v_new[state[0]][state[1]]) - (v[state[0]][state[1]])))

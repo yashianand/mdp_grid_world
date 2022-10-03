@@ -1,0 +1,4 @@
+SFTF,
+FTTF,
+FTFG,
+FFFF

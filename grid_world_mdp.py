@@ -59,10 +59,7 @@ class GridWorld:
             return self.to_pos(self.state), False
 
     def get_transition_prob(self, s1, action, s2):
-        '''
-        TODO:
-            - convert position (single int) to state (x,y coords)
-        '''
+       
         new_state_pos, is_wall = self.move(s1, action)
         s1_pos, s2_pos = self.to_pos(s1), self.to_pos(s2)
         # print("s1: {}, a: {}, s2: {}, new_state: {}".format(s1_pos, action, s2_pos, new_state_pos))

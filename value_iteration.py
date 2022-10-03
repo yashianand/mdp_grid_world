@@ -34,8 +34,8 @@ def valueIteration(grid, gamma=0.99, epsilon=0.01):
 
 
 
-# v, pi = valueIteration(gridWorld, gamma=0.99)
-# print("\nFinal State Values: \n")
-# printEnvironment(np.array(v[:]).reshape((4,4)))
-# print("\nFinal Policy:\n")
-# printEnvironment(np.array(pi[:], dtype=int).reshape((4,4)), policy=True)
+v, pi = valueIteration(gridWorld, gamma=0.99)
+print("\nFinal State Values: \n")
+printEnvironment(np.array(v[:]).reshape((4,4)))
+print("\nFinal Policy:\n")
+printEnvironment(np.array(pi[:], dtype=int).reshape((4,4)), policy=True)

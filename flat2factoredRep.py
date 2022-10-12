@@ -33,19 +33,18 @@ class FactoredGridWorld:
         terminal = False
         factoredNextStates = self.get_successors(self.state, action)
         s_prime, prob = [], []
-        print("factoredNextStates: ", factoredNextStates)
+        # print("factoredNextStates: ", factoredNextStates)
         for i in factoredNextStates:
             s_prime.append(i[0])
             prob.append(i[1])
-        print("s_prime: {}, prob: {}".format(s_prime, prob))
+        # print("s_prime: {}, prob: {}".format(s_prime, prob))
         next_state_idx = np.random.choice(len(s_prime), p=prob)
-        print("next_state_idx: ", next_state_idx)
+        # print("next_state_idx: ", next_state_idx)
         self.state = s_prime[next_state_idx]
-        # idx = s_prime.index(next_state)
         reward = self.get_reward(self.state)
         if self.is_goal(self.state):
             terminal = True
-        print("s_prime[next_state_idx] : {}, reward: {}, prob[next_state_idx]: {}, terminal: {}".format(s_prime[next_state_idx], reward, prob[next_state_idx], terminal))
+        # print("s_prime[next_state_idx] : {}, reward: {}, prob[next_state_idx]: {}, terminal: {}".format(s_prime[next_state_idx], reward, prob[next_state_idx], terminal))
         return s_prime[next_state_idx], reward, prob[next_state_idx], terminal
 
     def getActionFactorRep(self, a):
@@ -78,45 +77,6 @@ class FactoredGridWorld:
             else:
                 self.state = [new_state, False]
             return self.state, False
-
-
-    # def getTransitionFactorRep(self, s1, a, s2):
-    #     '''
-    #     s1: current state, format: [(int x, int y), bool traffic]
-    #     a: action, format: [int a]
-    #     s2: next state, format: [(int x, int y), bool traffic]
-    #     '''
-    #     new_factored_state, is_wall = self.move(s1, a)
-    #     print("new_factored_state: ", new_factored_state)
-
-    #     success_prob = 0.8
-    #     fail_prob = 0.2
-
-    #     # if desired action leads into the boundary
-    #     if is_wall:
-    #         # print("hit boundary")
-    #         if(s1 == s2):
-    #             success_prob = 1
-    #             traffic = s1[1]
-    #             traffic_prob = 1 if traffic else 0
-    #             return np.prod([success_prob, traffic_prob])
-
-    #     # if desired action is viable
-    #     elif not is_wall:
-    #         print("here*********************************************")
-    #         print("s2: {}, new_factored_state: {}".format(s2, new_factored_state))
-    #         if(s2 == new_factored_state):
-    #             traffic = new_factored_state[1]
-    #             traffic_prob = 1 if traffic else 0
-    #             print("Prob: ", np.prod([success_prob, traffic_prob]))
-    #             return np.prod([success_prob, traffic_prob])
-    #         # if desired action fails (with a prob=0.2)
-    #         if(s2 == s1):
-    #             traffic = s1[1]
-    #             traffic_prob = 1 if traffic else 0
-    #             return np.prod([fail_prob, traffic_prob])
-
-    #     return 0
 
     def getTransitionFactorRep(self, curr_state, action, next_state):
         '''
@@ -174,13 +134,13 @@ class FactoredGridWorld:
 
     def get_reward(self, factoredStateRep):
         (x,y), traffic = factoredStateRep
-        if self.is_goal((x,y)) == True:
-            pos_reward = 100
+        if self.is_goal(factoredStateRep) == True:
+            state_reward = 100
         elif traffic == True:
-            pos_reward = -10
+            state_reward = -10
         else:
-            pos_reward = -1
-        return pos_reward
+            state_reward = -1
+        return state_reward
 
 # Visualization
 def printEnvironment(grid, policy=False):
@@ -239,5 +199,3 @@ directions = [0, 1, 2, 3]
 
 grid = readMDPfile(filename)
 gridWorld = FactoredGridWorld(grid, directions, terminal_state=[(2, 3), False])
-gridWorld.reset()
-gridWorld.step(action=2)

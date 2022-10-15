@@ -1,5 +1,4 @@
 import numpy as np
-from pip import main
 
 class FactoredGridWorld:
     gridWorld = None

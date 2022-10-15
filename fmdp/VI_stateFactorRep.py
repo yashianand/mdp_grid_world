@@ -1,4 +1,4 @@
-from fmdp.flat2factoredRep import gridWorld, printEnvironment
+from flat2factoredRep import gridWorld, printEnvironment
 import numpy as np
 
 def valueIteration(grid, gamma=0.99, epsilon=0.01):

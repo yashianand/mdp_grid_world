@@ -36,8 +36,8 @@ class FactoredGridWorld:
             s_prime.append(i[0])
             prob.append(i[1])
         next_state_idx = np.random.choice(len(s_prime), p=prob)
-        reward = self.get_reward(self.state, action)
         self.state = s_prime[next_state_idx]
+        reward = self.get_reward(self.state, action)
         if self.is_goal(self.state):
             terminal = True
         # print("s_prime[next_state_idx] : {}, reward: {}, prob[next_state_idx]: {}, terminal: {}".format(s_prime[next_state_idx], reward, prob[next_state_idx], terminal))

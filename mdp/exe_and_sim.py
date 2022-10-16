@@ -10,6 +10,7 @@ def play_episodes(grid, trials, policy):
         terminal= False
         grid.reset()
         observation, reward, prob, terminal = grid.step(int(policy[0]))
+        # print("observation: {}, reward: {}, prob: {}, terminal: {}".format(observation, reward, prob, terminal))
         trial_reward += reward
         while not terminal:
             observation, reward, prob, terminal = grid.step(int(policy[observation]))

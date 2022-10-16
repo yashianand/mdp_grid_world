@@ -1,6 +1,5 @@
-from grid_world_mdp import gridWorld, printEnvironment
-from policy_iteration import policyIteration
-from value_iteration import valueIteration
+from factored_mdp import gridWorld, printEnvironment
+from VI_fmdp import valueIteration
 import numpy as np
 
 def play_episodes(grid, trials, policy):
@@ -9,10 +8,10 @@ def play_episodes(grid, trials, policy):
         trial_reward = 0
         terminal= False
         grid.reset()
-        observation, reward, prob, terminal = grid.step(int(policy[0]))
+        observation, reward, prob, terminal = grid.step(int(policy[0][0]))
         trial_reward += reward
         while not terminal:
-            observation, reward, prob, terminal = grid.step(int(policy[observation]))
+            observation, reward, prob, terminal = grid.step(int(policy[observation[0]]))
             trial_reward += reward
         rewards.append(trial_reward)
     return np.average(rewards), np.std(rewards)

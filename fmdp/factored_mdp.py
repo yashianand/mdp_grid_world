@@ -32,15 +32,12 @@ class FactoredGridWorld:
         terminal = False
         factoredNextStates = self.get_successors(self.state, action)
         s_prime, prob = [], []
-        # print("factoredNextStates: ", factoredNextStates)
         for i in factoredNextStates:
             s_prime.append(i[0])
             prob.append(i[1])
-        # print("s_prime: {}, prob: {}".format(s_prime, prob))
         next_state_idx = np.random.choice(len(s_prime), p=prob)
-        # print("next_state_idx: ", next_state_idx)
+        reward = self.get_reward(self.state, action)
         self.state = s_prime[next_state_idx]
-        reward = self.get_reward(self.state)
         if self.is_goal(self.state):
             terminal = True
         # print("s_prime[next_state_idx] : {}, reward: {}, prob[next_state_idx]: {}, terminal: {}".format(s_prime[next_state_idx], reward, prob[next_state_idx], terminal))
@@ -72,10 +69,9 @@ class FactoredGridWorld:
             return self.state, True
         else:
             if self.grid_list[new_state[0]][new_state[1]] == 'T':
-                self.state = [new_state, True]
+                return [new_state, True], False
             else:
-                self.state = [new_state, False]
-            return self.state, False
+                return [new_state, False], False
 
     def getTransitionFactorRep(self, curr_state, action, next_state):
         '''
@@ -131,14 +127,15 @@ class FactoredGridWorld:
                 successors.append((next_state, p))
         return successors
 
-    def get_reward(self, factoredStateRep):
+    def get_reward(self, factoredStateRep, action):
         (x,y), traffic = factoredStateRep
-        if self.is_goal(factoredStateRep) == True:
-            state_reward = 100
-        elif traffic == True:
-            state_reward = -10
-        else:
-            state_reward = -1
+        if action in [0,1,2,3]:
+            if self.is_goal(factoredStateRep) == True:
+                state_reward = 100
+            elif traffic == True:
+                state_reward = -10
+            else:
+                state_reward = -1
         return state_reward
 
 # Visualization
@@ -198,3 +195,5 @@ directions = [0, 1, 2, 3]
 
 grid = readMDPfile(filename)
 gridWorld = FactoredGridWorld(grid, directions, terminal_state=[(2, 3), False])
+# gridWorld.reset()
+# gridWorld.step(action=0)

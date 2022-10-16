@@ -1,4 +1,5 @@
-from flat2factoredRep import gridWorld, printEnvironment
+from email import policy
+from factored_mdp import gridWorld, printEnvironment
 import numpy as np
 
 def valueIteration(grid, gamma=0.99, epsilon=0.01):
@@ -22,14 +23,17 @@ def valueIteration(grid, gamma=0.99, epsilon=0.01):
             (x,y), traffic = state
             state_action_pair = []
             value = []
-            if grid.is_goal(state) == True:
-                v_new[x][y] = grid.get_reward(state)
-                continue
+
             for action in range(nA):
                 factoredAction = grid.getActionFactorRep(action)
                 state_action_pair.append((state, factoredAction))
                 value.append(sum([trans_prob*(v[next_state[0][0]][next_state[0][1]]) for (next_state, trans_prob) in grid.get_successors(state, action)]) )
-            v_new[x][y] = grid.get_reward(state) + gamma * max(value)
+
+            if grid.is_goal(state) == True:
+                v_new[x][y] = grid.get_reward(state, value.index(max(value)))
+                continue
+
+            v_new[x][y] = grid.get_reward(state, value.index(max(value))) + gamma * max(value)
             pi_new[x][y] = value.index(max(value))
             delta = max(delta, abs((v_new[x][y]) - (v[x][y])))
 

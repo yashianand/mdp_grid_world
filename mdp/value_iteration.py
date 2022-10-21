@@ -22,7 +22,9 @@ def valueIteration(grid, gamma=0.99, epsilon=0.01):
             for action in range(nA):
                 state_action_pair.append((state, action))
                 value.append(sum([trans_prob*v[next_state] for (next_state, trans_prob) in grid.get_successors(state, action)]) )
-            v_new[state] = grid.get_reward(state) + gamma * max(value)
+                value[action] = grid.get_reward(state) + gamma * value[action]
+            # print("state_action_pair: {} value: {}".format(state_action_pair, value))
+            v_new[state] = max(value)
             pi_new[state] = value.index(max(value))
             delta = max(delta, abs(v_new[state] - v[state]))
 

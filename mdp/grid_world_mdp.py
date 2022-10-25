@@ -58,32 +58,67 @@ class GridWorld:
             self.state = self.to_s(new_state_pos[0], new_state_pos[1])
             return self.to_pos(self.state), False
 
+    def get_side_states(self, state, action):
+        side_states = []
+
+        for a in range(self.num_actions):
+            if (a!=action):
+                new_state, is_wall = self.move(state, a)
+                if not is_wall:
+                    side_states.append(self.to_s(new_state[0], new_state[1]))
+                elif is_wall:
+                    side_states.append(state)
+
+        return side_states
+
     def get_transition_prob(self, s1, action, s2):
-       
+        '''
+        TODO:
+            - convert position (single int) to state (x,y coords)
+        '''
         new_state_pos, is_wall = self.move(s1, action)
         s1_pos, s2_pos = self.to_pos(s1), self.to_pos(s2)
-        # print("s1: {}, a: {}, s2: {}, new_state: {}".format(s1_pos, action, s2_pos, new_state_pos))
+        sstates = self.get_side_states(s1, action)
+        # print("state1: {}, action: {}, sstates: {}".format(s1, action, sstates))
 
-        success_prob = 0.8
-        fail_prob = 0.2
+
+        success_prob = 0.7
+        fail_prob = 0.1
+
+
+        # if (s1 in sstates):
+        #     state_count = sstates.count(s1)
+        #     if (s2_pos == new_state_pos) or (s1_pos == s2_pos):
+        #         success_prob += state_count*0.1
+        #     else:
+        #         fail_prob += state_count*0.1
 
         # if desired action leads into the boundary
         if is_wall:
             # print("hit boundary")
             if(s1_pos == s2_pos):
                 success_prob = 1
+                # if(s1 in sstates):
+                #     state_count = sstates.count(s1)
+                #     success_prob += state_count*0.1
+                # return round(success_prob, 1)
                 return success_prob
+
 
         # if desired action is viable
         elif not is_wall:
             if(s2_pos == new_state_pos):
                 return success_prob
-            # if desired action fails (with a prob=0.2)
-            if(s2_pos == s1_pos):
-                return fail_prob
+
+            for side_state in sstates:
+                if(s2 == side_state):
+                    state_count = sstates.count(s2)
+                    # print("Fail state: {},  count: {}".format(side_state, state_count))
+                    fail_prob *= state_count
+                    return fail_prob
 
         return 0
-
+        
     def get_successors(self, state, action):
         successors = []
         for next_state in range(self.num_states):

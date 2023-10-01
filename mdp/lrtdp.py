@@ -4,21 +4,21 @@ import numpy as np
 '''
 ----------------------------Helper Functions------------------------
 '''
-def greedy_action(grid, state):
+def greedy_action(grid, state, v):
     q_values = []
-    for action in range(nA):
-        q_values.append(qValue(grid, state, action))
+    for action in range(grid.num_actions):
+        q_values.append(qValue(grid, state, action, v))
     return np.argmin(q_values)
 
-def qValue(grid, state, action):
+def qValue(grid, state, action, v):
     state_val = sum([trans_prob*v[next_state] for (next_state, trans_prob) in grid.get_successors(state, action)])
     state_val += grid.get_reward(state)
     return state_val
 
-def update(grid, state):
-    action = greedy_action(grid, state)
+def update(grid, state, v, pi):
+    action = greedy_action(grid, state, v)
     pi[state] = action
-    v[state] = qValue(grid, state, action)
+    v[state] = qValue(grid, state, action, v)
 
 def pickNextState(grid, state, action):
     transitions = grid.get_successors(state, action)
@@ -29,9 +29,9 @@ def pickNextState(grid, state, action):
     next_state = np.random.choice(s_prime, p=prob)
     return next_state
 
-def residual(grid, state):
-    action = greedy_action(grid, state)
-    return abs(v[state] - qValue(grid, state, action))
+def residual(grid, state, v):
+    action = greedy_action(grid, state, v)
+    return abs(v[state] - qValue(grid, state, action, v))
 
 def printEnvironment(grid, vals,  policy=False):
     res = ""
@@ -49,7 +49,7 @@ def printEnvironment(grid, vals,  policy=False):
 '''
 --------------------------Check if solved--------------------------
 '''
-def checkSolved(grid, state, epsilon):
+def checkSolved(grid, state, epsilon, SOLVED, v, pi):
     rv = True
     open = []
     closed = []
@@ -61,12 +61,12 @@ def checkSolved(grid, state, epsilon):
         closed.append(state)
 
         # check residual
-        if residual(grid, state) > epsilon:
+        if residual(grid, state, v) > epsilon:
             rv = False
             continue
 
         # expand state
-        action = greedy_action(grid, state)
+        action = greedy_action(grid, state, v)
         for (next_state, trans_prob) in grid.get_successors(state, action):
             if trans_prob > 0:
                 if (next_state not in SOLVED) and (next_state not in list(set(open) | set(closed))):
@@ -80,14 +80,15 @@ def checkSolved(grid, state, epsilon):
         # update states with residuals and ancestors
         while closed != []:
             state = closed.pop()
-            update(grid, state)
+            update(grid, state, v, pi)
     return rv
 
 '''
 -------------------------------------------------------------------
 '''
 
-def lrtdp_trial(grid, state, epsilon):
+def lrtdp_trial(grid, state, epsilon, SOLVED, v, pi):
+    print('here')
     visited = []
     while state not in SOLVED:
         # insert into visited
@@ -99,36 +100,36 @@ def lrtdp_trial(grid, state, epsilon):
             break
 
         # pick best action and update hash
-        a = greedy_action(grid, state)
-        update(grid, state)
+        a = greedy_action(grid, state, v)
+        update(grid, state, v, pi)
 
         # stochastically simulate next state
         state = pickNextState(grid, state, a)
-
+    print('here 2')
     # try labeling visited states in reverse order
     while visited != []:
         # print("Visited: ", visited)
         state = visited.pop()
-        if not checkSolved(grid, state, epsilon):
+        if not checkSolved(grid, state, epsilon, SOLVED, v, pi):
             break
 
-def lrtdp(grid, state, epsilon):
-    while state not in SOLVED:
-        lrtdp_trial(grid, state, epsilon)
-    print("--"*20)
-    print("Iteration: ", i)
-    print("Value function: \n")
-    printEnvironment(grid, np.array(v[:], dtype=float).reshape(4,4), policy=False)
-    print("Policy: \n")
-    printEnvironment(grid, np.array(pi[:], dtype=int).reshape(4,4), policy=True)
-    print("--"*20)
-
-if __name__ == "__main__":
-    nS = sspWorld.num_states
-    nA = sspWorld.num_actions
-    for i in range(10):
+def lrtdp(grid, state, epsilon=0.1):
+    nS = grid.num_states
+    v = np.zeros(nS)
+    pi = np.zeros(nS)
+    for i in range(100):
+        print('iteration: ', i)
         SOLVED = []
-        v = np.zeros(nS)
-        pi = np.zeros(nS)
-        sspWorld.reset()
-        lrtdp(sspWorld, sspWorld.state, epsilon=0.1)
+
+        grid.reset()
+        while state not in SOLVED:
+            lrtdp_trial(grid, state, epsilon, SOLVED, v, pi)
+        print("--"*20)
+        print("Iteration: ", i)
+        print("Value function: \n")
+        printEnvironment(grid, np.array(v[:], dtype=float).reshape(4,4), policy=False)
+        print("Policy: \n")
+        printEnvironment(grid, np.array(pi[:], dtype=int).reshape(4,4), policy=True)
+        print("--"*20)
+
+lrtdp(sspWorld, sspWorld.state, epsilon=0.1)

@@ -21,7 +21,7 @@ def is_valid(board: list[list[str]], max_size: int) -> bool:
     return False
 
 # Generate random grid world
-def generate_random_grid(size=8, p=0.8):
+def generate_random_grid(size=8, p=0.32):
     """Generates a random valid map (one that has a path from start to goal)
     Args:
         size: size of each side of the grid
@@ -33,13 +33,21 @@ def generate_random_grid(size=8, p=0.8):
     board = []
     while not valid:
         p = min(1, p)
-        board = np.random.choice(["F", "T"], (size, size), p=[p, 1 - p])
+        board = np.random.choice(["T", "."], (size, size), p=[p, 1 - p])
         board[0][0] = "S"
+        # random row and column for goal
+        # row = np.random.randint(0, size)
+        # col = np.random.randint(0, size)
+        # board[row][col] = "G"
         board[-1][-1] = "G"
         valid = is_valid(board, size)
         # print(valid)
         # print(board)
     return ["".join(x) for x in board]
 
-# env = generate_random_grid()
-# print(env)
+env = generate_random_grid(size=4, p=0.45)
+print(env)
+# ['STT....T.T', '.T.T.TT...', '...T...GT.', 'TT.....TTT', 'T.TTTTTT..', 'T.T.T.TT..', '..TTT..T..', 'T.TTT.TT.T', 'T.T.....TT', '.T..T..TT.'] - 40% random goal
+# ['S..T.T.TT.', 'TT...TT...', '..T...TT..', 'T..T.TT.T.', '..T..T.TT.', 'T..T....TT', '.TT..T...T', 'TTT..G..T.', '.T..T...T.', '.T....T...'] - 35% random goal
+# ['S......T..', '..T....T..', '...TT..T.T', 'TTT.......', '..........', 'T..T..T...', '..T....T.T', '.......TTT', '..TTT.T...', '.T..G.T...'] - 30% random goal
+# ['STTTT.TTTT', '..T.TTTTT.', '..T.T...T.', '.TT..T.T.T', '..........', '..TTTT.TTT', 'TT.T...TT.', 'T....TTT.T', '..T.T.T.T.', '..T......G'] - 40%
